@@ -3,11 +3,12 @@
 #include <iostream>
 #include <fstream>
 #include <array>
+#include <functional>
+#include <string>
 
 #define ALL_POSSIBLE_OPTIONS 3
 #define POSSIBLE_OPTIONS ALL_POSSIBLE_OPTIONS-1
-#define GENE_SIZE 6
-using Gene = std::array<char, GENE_SIZE>;
+using Gene = std::vector<char>;
 char mapIntegrer(int i);
 int randInt(const int min, const int max);
 
@@ -15,14 +16,14 @@ int randInt(const int min, const int max);
 Gene generateGene(){
     Gene toReturn;
     for(auto & g: toReturn){
-        g =  mapIntegrer(randInt(0,POSSIBLE_OPTIONS-1));
+        g =  mapIntegrer(randInt(0,ALL_POSSIBLE_OPTIONS-1));
     }
     return toReturn;
 }
 
-auto print = [](Gene & g){
+auto print = [](const Gene & g){
     std::cout<<"[ ";
-    for(auto & k: g){
+    for(auto const & k: g){
         std::cout<<k<<", ";
     }
     std::cout<<"]\n";
@@ -38,24 +39,29 @@ public:
     static void generateAllSchemas(){
         if(allSchemas == nullptr)
             allSchemas = new std::vector<std::pair<bool,Gene>>();    
-        Gene g ;
+        Gene g;
         std::vector<Gene> temp_vec;
-
-        generateSchemasOfLevel(temp_vec, g);
+        auto map_func = [](Gene& g, const unsigned level, unsigned i){ g[level-1] = mapIntegrer(i);};
+        generateSchemasOfLevel(temp_vec, g, map_func);
         for(auto const & gene: temp_vec){
             allSchemas->push_back(std::make_pair(false, gene));
         }
     }    
 
-    static void generateSchemasOfLevel(std::vector<Gene> & vec_ref, Gene prev_g, unsigned possible_options = ALL_POSSIBLE_OPTIONS, unsigned level = 0){
+    static void generateSchemasOfLevel( std::vector<Gene> & vec_ref, 
+                                        Gene prev_g, 
+                                        std::function<void(Gene&, unsigned, unsigned)> map_func,                                        
+                                        unsigned possible_options = ALL_POSSIBLE_OPTIONS, 
+                                        unsigned level = 0)
+    {
         if(level < GENE_SIZE)
             level++;
-            for(int i = 0; i < possible_options; i++){
-                prev_g[level-1] = mapIntegrer(i);
+            for(unsigned i = 0; i < possible_options; i++){
+                map_func(prev_g, level, i);
                 if(level == GENE_SIZE){
                     vec_ref.push_back(prev_g);
                 }else{
-                    generateSchemasOfLevel(vec_ref, prev_g, possible_options, level);
+                    generateSchemasOfLevel(vec_ref, prev_g, map_func,possible_options, level);
                 }
             }  
         return;     
@@ -102,20 +108,12 @@ public:
     }
 
     static std::vector<Gene> generateSchemasOfLevels(const Gene& g){
-        auto map = [](int i, char value) -> char{return i == 0 ? value : '#';};
-        
+        auto map_func = [](Gene& g, const unsigned level, unsigned i){ 
+            g[level-1] =  i == 0 ? g[level-1]  : '#';
+        };
+
         std::vector<Gene> toReturn;
-        Gene g;
-        generateSchemasOfLevel(toReturn, g, POSSIBLE_OPTIONS, map);
-        for(int i1 = 0; i1 < 2; i1++)
-            for(int i2 = 0; i2 < 2; i2++)
-                for(int i3 = 0; i3 < 2; i3++)
-                    for(int i4 = 0; i4 < 2; i4++)
-                        for(int i5 = 0; i5 < 2; i5++)
-                            for(int i6 = 0; i6 < 2; i6++){
-                                    Gene toAdd = {map(i1, g[0]),map(i2, g[1]),map(i3, g[2]), map(i4,g[3]),map(i5, g[4]),map(i6, g[5])};
-                                    toReturn.push_back(toAdd);
-                            }
+        generateSchemasOfLevel(toReturn, g, map_func, POSSIBLE_OPTIONS);
         return toReturn;
     }
 
@@ -140,10 +138,11 @@ unsigned tenTimesRun(int i){
     return static_cast<unsigned>(sum/10);
 }
 
-void prodRun(){
+void testCase(const unsigned GENE_SIZE){
     SchemeResolver::generateAllSchemas();
     std::fstream fs;
-    fs.open("data.dat", std::fstream::out);
+    std::string filename = "test_genSize_" + std::to_string(GENE_SIZE) + ".dat";
+    fs.open(filename, std::fstream::out);
     for(int i = 1; i <= 100; i++){
         auto num = tenTimesRun(i);
         fs << i << "\t" << num << std::endl;
@@ -164,18 +163,37 @@ void prodRun(){
     SchemeResolver::deleteAllSchemas();
 }
 
-void testRun(){
+std::vector<unsigned> prepareTestData(){
+    std::vector<unsigned> testData = {
+        6// 6,7,8,9,10,11,12,13,14,15,16,17
+    };
+    return testData;
+}
+
+void prodRun(){
+    auto testData = prepareTestData();    
+    for(auto const & genSize: testData){
+        testCase(genSize);
+    }
+}
+
+void testRun(unsigned i){
     SchemeResolver::generateAllSchemas();
     std::fstream fs;
-    fs.open("data.dat", std::fstream::out);
-    auto num = tenTimesRun(1000);
-    fs << 1 << "\t" << num << std::endl;
+    fs.open("data8.dat", std::fstream::out);
+    auto generation = generatePopulation(i);
+    std::cout << generation.size() << '\n';
+    for(auto& a: generation){
+        print(a);
+    }
+    auto num = SchemeResolver::checkGeneration(generation);    
+    fs << i << "\t" << num << std::endl;
     fs.close();
     SchemeResolver::deleteAllSchemas();
 }
 
 int main(int argc, char**argv){ 
-    // testRun();
+    // testRun(2);
     prodRun();
 }
 
