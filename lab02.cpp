@@ -172,7 +172,6 @@ std::vector<unsigned> prepareTestData(int argc, char**argv){
     for(int i = 1; i < argc; i++)
        testData.push_back(static_cast<unsigned>(std::atoi(argv[i])));
 
-    for(auto & a: testData) std::cout<< a << '\n';
     return testData;
 }
 
