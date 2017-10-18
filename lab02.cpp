@@ -69,6 +69,7 @@ public:
 
     static void deleteAllSchemas(){
         delete allSchemas;
+        allSchemas = nullptr;
     }
 
     static void clearSchemaMarks(){
@@ -167,9 +168,11 @@ void testCase(const unsigned GENE_SIZE){
 }
 
 std::vector<unsigned> prepareTestData(int argc, char**argv){
-    std::vector<unsigned> testData = {
-       static_cast<unsigned>(std::atoi(argv[1]))
-    };
+    std::vector<unsigned> testData;
+    for(int i = 1; i < argc; i++)
+       testData.push_back(static_cast<unsigned>(std::atoi(argv[i])));
+
+    for(auto & a: testData) std::cout<< a << '\n';
     return testData;
 }
 
