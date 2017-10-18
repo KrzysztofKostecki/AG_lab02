@@ -129,15 +129,15 @@ std::vector<Gene> generatePopulation(unsigned sizeOfPopulation, unsigned geneSiz
     return toReturn;
 }
 
-unsigned tenTimesRun(int i, unsigned geneSize){
+unsigned nTimesRun( int i, unsigned geneSize, unsigned n=1){
     std::cout << "Gene size: " << geneSize << ", population size: " << i <<" started..." << std::endl;            
     auto generation = generatePopulation(i, geneSize);
     unsigned sum = 0;
-    for(int u = 0; u < 10; u++){
+    for(unsigned u = 0; u < n; u++){
         sum += SchemeResolver::checkGeneration(generation);        
     }
     std::cout << "\033[1;32mCompleted.\033[0m" << std::endl;                    
-    return static_cast<unsigned>(sum/10);
+    return static_cast<unsigned>(sum/n);
 }
 
 void testCase(const unsigned GENE_SIZE){
@@ -146,35 +146,35 @@ void testCase(const unsigned GENE_SIZE){
     std::string filename = "test_genSize_" + std::to_string(GENE_SIZE) + ".dat";
     fs.open(filename, std::fstream::out);
     for(int i = 1; i <= 100; i++){
-        auto num = tenTimesRun(i, GENE_SIZE);
+        auto num = nTimesRun(i, GENE_SIZE);
         fs << i << "\t" << num << std::endl;
     }
     for(int i = 100; i <= 300; i+=10){
-        auto num = tenTimesRun(i, GENE_SIZE);
+        auto num = nTimesRun( i, GENE_SIZE);
         fs << i << "\t" << num << std::endl;        
     }
     for(int i = 300; i <= 500; i+=50){
         
-        auto num = tenTimesRun(i, GENE_SIZE);
+        auto num = nTimesRun(i, GENE_SIZE);
         fs << i << "\t" << num << std::endl;
     }
     for(int i = 500; i <= 1000; i+=100){
-        auto num = tenTimesRun(i, GENE_SIZE);
+        auto num = nTimesRun(i, GENE_SIZE);
         fs << i << "\t" << num << std::endl;
     }
     fs.close();
     SchemeResolver::deleteAllSchemas();
 }
 
-std::vector<unsigned> prepareTestData(){
+std::vector<unsigned> prepareTestData(int argc, char**argv){
     std::vector<unsigned> testData = {
-       8 // 8,9,10,11,12,13,14,15,16,17
+       static_cast<unsigned>(std::atoi(argv[1]))
     };
     return testData;
 }
 
-void prodRun(){
-    auto testData = prepareTestData();    
+void prodRun(int argc, char**argv){
+    auto testData = prepareTestData(argc, argv);    
     for(auto const & genSize: testData){
         std::cout << "Test case with gene size " << genSize << " started..." << std::endl;
         testCase(genSize);
@@ -199,7 +199,7 @@ void prodRun(){
 
 int main(int argc, char**argv){ 
     // testRun(2);
-    prodRun();
+    prodRun(argc, argv);
 }
 
 char mapIntegrer(int i){
